@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.1/dist/showdown.min.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AssessMate</title>
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='images/logo/icon.svg') }}"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap");
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "DM Sans", sans-serif;
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      body,
+      html {
+        margin: 0;
+        background: #fbfaf7;
+        /* margin-bottom: 50vh; */
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        margin: auto;
+        max-width: 800px;
+        padding: 20px;
+        justify-content: space-between;
+        margin-bottom: 50vh;
+      }
+
+      .title-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 20px;
+        text-align: center;
+        font-family: "DM Sans", sans-serif;
+      }
+
+      .assessmate-icon {
+        transform: translateY(5px);
+        width: 24px;
+      }
+      .title {
+        font-size: 1.5em;
+        color: #13522a;
+        margin-bottom: 10px;
+      }
+
+      .message {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      .avatar {
+        align-self: flex-start;
+        justify-content: space-between;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        top: 10px;
+        margin-right: 10px;
+      }
+
+      .message-main.user-message {
+        justify-content: flex-end;
+        background-color: #e6ede8;
+        color: #01240e;
+      }
+
+      .message-main.system-message {
+        justify-content: flex-start;
+        background-color: #ffffff;
+        color: #01240e;
+      }
+
+      .message-content {
+        flex-grow: 1;
+        border-radius: 10px;
+        padding: 5px 10px 5px 0px;
+      }
+
+      .input-area {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: end;
+        padding: 10px;
+        background: #fff;
+        border-radius: 10px;
+        max-width: 800px;
+        margin: 0 auto;
+        box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      #messageInput {
+        flex-grow: 1;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border-radius: 10px;
+        margin-right: 10px;
+        overflow-y: auto;
+        max-height: 30vh;
+      }
+
+      #sendMessage {
+        background-color: #507a5b;
+        border-radius: 10px;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1rem;
+      }
+
+      #loadingIndicator {
+        display: none;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #507a5b;
+        border-radius: 12px;
+        width: 24px;
+        height: 24px;
+        animation: spin 2s linear infinite;
+      }
+
+      .action-button {
+        background-color: transparent;
+        border: none;
+        color: #507a5b;
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        font-size: 1rem;
+        padding: 5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: color 0.3s;
+      }
+
+      .action-button:hover {
+        color: #13522a;
+      }
+
+      .action-icon {
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+        margin-right: 5px;
+      }
+
+      .chat-history {
+        width: 100%;
+        max-width: 800px;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      /* Styles for the individual messages */
+      .message {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 0px;
+      }
+
+      /* Styles for the main part of the message */
+      .message-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background-color: #e6ede8;
+        border-radius: 8px;
+      }
+
+      .message-content {
+        white-space: pre-wrap;
+      }
+
+      .message-content ul,
+      .message-content ol {
+        margin-left: 20px;
+      }
+
+      .message-content strong {
+        font-weight: bold;
+      }
+      /* Styles for the actions container */
+      .actions {
+        display: flex;
+        justify-content: flex-start;
+        gap: 10px;
+        margin-top: 5px;
+      }
+
+      #clearSession {
+        background-color: #f8eeee;
+        border-radius: 10px;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        font-size: 1rem;
+        margin-left: 10px;
+        cursor: pointer;
+        width: auto;
+      }
+
+      #clearSession:hover {
+        background-color: #be4545;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container,
+        .input-area,
+        .message {
+          padding: 10px;
+          width: 100%;
+        }
+        .avatar {
+          width: 24px;
+          height: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="title-container">
+      <a href="/">
+        <div class="title">
+          <img
+            class="assessmate-icon"
+            src="{{ url_for('static', filename='images/logo/icon.svg') }}"
+            alt=""
+          />
+          <span>AssessMate</span>
+        </div>
+      </a>
+    </div>
+    <div class="container">
+      <div class="chat-history">
+        {% for message_type, message_content in messages %}
+        <div class="message">
+          <div
+            class="message-main {{ 'user-message' if message_type == 'user' else 'system-message' }}"
+          >
+            <img
+              class="avatar"
+              src="{{ url_for('static', filename='images/logo/you.svg') if message_type == 'user' else url_for('static', filename='images/logo/icon.svg') }}"
+              alt="Avatar"
+            />
+            <div class="message-content">{{ message_content }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <!-- Clear Session Button -->
+      <button id="clearSession" onclick="clearSession()">Clear Session</button>
+      <div id="loadingIndicator" style="display: none">
+        <!-- Loading Animation -->
+      </div>
+
+      <!-- Message Input -->
+      <div class="input-area" id="inputArea">
+        <textarea
+          id="messageInput"
+          placeholder="Type your message here..."
+        ></textarea>
+        <button id="sendMessage" onclick="submitQuestion()">Send</button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var messageInput = document.getElementById("messageInput");
+        messageInput.addEventListener("input", function () {
+          this.style.height = "auto";
+          this.style.height = this.scrollHeight + "px";
+        });
+      });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        var messageInput = document.getElementById("messageInput");
+
+        // Listen for message sent
+        messageInput.addEventListener("keydown", function (event) {
+          // Check for Command (Mac) or Ctrl (Windows/Linux) + Enter
+          if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+            event.preventDefault();
+            submitQuestion();
+          }
+        });
+      });
+
+      function submitQuestion() {
+        const userInput = document.getElementById("messageInput");
+        if (!userInput.value.trim()) {
+          alert("Please enter a message.");
+          return;
+        }
+
+        // Disable message input
+        userInput.disabled = true;
+        document.getElementById("loadingIndicator").style.display = "block";
+
+        fetch("/ask", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: userInput.value.trim() }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // reload the page
+            location.reload();
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          })
+          .finally(() => {
+            userInput.disabled = false;
+            document.getElementById("loadingIndicator").style.display = "none";
+            userInput.focus();
+          });
+      }
+
+      function formatSystemMessage(message) {
+        // Bold text
+        message = message.replace(/\*{2}(.*?)\*{2}/g, "<strong>$1</strong>");
+        // Convert individual list items to HTML list items
+        message = message.replace(/^[-+*\d]\.\s(.*?)$/gm, "<li>$1</li>");
+        // Wrap all list items in a single ordered list tag
+        message = message.replace(/(<li>.*<\/li>)/g, "<ol>$1</ol>");
+        // Ensure only one set of <ol></ol> tags enclose all the <li> tags
+        message = message.replace(/<\/ol>\s*<ol>/g, "");
+
+        return message;
+      }
+
+      function addMessageToChatHistory(
+        type,
+        message,
+        userAvatarUrl,
+        systemAvatarUrl
+      ) {
+        const chatHistory = document.querySelector(".chat-history");
+
+        // Create the main chat
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message");
+
+        const messageMain = document.createElement("div");
+        messageMain.classList.add("message-main");
+        messageMain.classList.add(type);
+
+        // create and append the avatar icons
+        const avatar = document.createElement("img");
+        avatar.classList.add("avatar");
+        if (type === "user-message") {
+          avatar.src = userAvatarUrl;
+          avatar.alt = "User Avatar";
+        } else if (type === "system-message") {
+          avatar.src = systemAvatarUrl;
+          avatar.alt = "System Icon";
+        }
+        messageMain.appendChild(avatar);
+
+        // create and add message content
+        const messageContent = document.createElement("div");
+        messageContent.classList.add("message-content");
+
+        // convert Markdown to HTML
+        messageContent.innerHTML = formatSystemMessage(message);
+        messageMain.appendChild(messageContent);
+
+        // append message to messageDiv
+        messageDiv.appendChild(messageMain);
+
+        // add action buttons to system message
+        if (type === "system-message") {
+          const actionsDiv = document.createElement("div");
+          actionsDiv.classList.add("actions");
+
+          const copyButton = document.createElement("button");
+          copyButton.classList.add("action-button", "copy-button");
+          copyButton.onclick = function () {
+            copyToClipboard(message);
+          };
+          const copyIcon = document.createElement("img");
+          copyIcon.src =
+            '{{ url_for("static", filename="images/logo/copy.svg") }}';
+          copyIcon.alt = "Copy";
+          copyIcon.classList.add("action-icon");
+          copyButton.appendChild(copyIcon);
+          copyButton.appendChild(document.createTextNode(" Copy"));
+
+          const regenerateButton = document.createElement("button");
+          regenerateButton.classList.add("action-button", "regenerate-button");
+          regenerateButton.onclick = function () {
+            regenerateMessage();
+          };
+          const regenerateIcon = document.createElement("img");
+          regenerateIcon.src =
+            '{{ url_for("static", filename="images/logo/regenerate.svg") }}';
+          regenerateIcon.alt = "Regenerate";
+          regenerateIcon.classList.add("action-icon");
+          regenerateButton.appendChild(regenerateIcon);
+          regenerateButton.appendChild(document.createTextNode(" Regenerate"));
+          actionsDiv.appendChild(copyButton);
+          actionsDiv.appendChild(regenerateButton);
+
+          // append buttons to messageDiv
+          messageDiv.appendChild(actionsDiv);
+        }
+
+        // append messageDiv to chatHistory
+        chatHistory.appendChild(messageDiv);
+      }
+
+      // clear session history
+      function clearSession() {
+        fetch("/clear-session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+          .then(() => {
+            window.location.href = "/"; // redirect to index.html
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(
+          function () {
+            alert("Text copied to clipboard");
+          },
+          function (err) {
+            console.error("Could not copy text: ", err);
+          }
+        );
+      }
+
+      function regenerateMessage() {
+        const lastUserQuery = sessionStorage.getItem("lastUserQuery"); // Retrieve the last user query from session storage
+        if (!lastUserQuery) {
+          alert("No recent message to regenerate.");
+          return;
+        }
+
+        fetch("/ask", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: lastUserQuery }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // Update the last system message in the chat history
+            const lastSystemMessageDiv = document.querySelector(
+              ".chat-history .system-message:last-child .message-content"
+            );
+            if (lastSystemMessageDiv) {
+              lastSystemMessageDiv.innerHTML = formatSystemMessage(data.answer); // Update the message content
+            } else {
+              // If the last system message is not found, add it as a new message
+              addMessageToChatHistory("system-message", data.answer);
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+    </script>
+  </body>
+</html>

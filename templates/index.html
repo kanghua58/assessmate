@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AssessMate</title>
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='images/logo/icon.svg') }}"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body,
+      html {
+        width: 100%;
+        height: 100%;
+        font-family: "DM Sans", sans-serif;
+        background: #fbfaf7;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100vh;
+        padding: 20px;
+        text-align: center;
+        font-family: "DM Sans", sans-serif;
+        padding-top: 5vh;
+      }
+
+      .assessmate-icon {
+        transform: translateY(5px);
+      }
+      .title {
+        font-size: 2.25em;
+        color: #13522a;
+        margin-bottom: 10px;
+      }
+
+      .tagline {
+        font-size: 1.5em;
+        color: #13522a;
+        margin-bottom: 2em;
+      }
+
+      .headline {
+        padding: 10px;
+        font-weight: 700;
+        color: #13522a;
+        text-align: left;
+      }
+
+      .instruction {
+        text-align: left;
+        color: #507a5b;
+        margin-left: 10px;
+      }
+      .instruction * {
+        padding: 5px 0;
+      }
+
+      .instruction ol {
+        margin-left: 30px;
+      }
+
+      .instruction li {
+        padding-left: 20px;
+        list-style-position: outside;
+      }
+
+      .chat-box {
+        width: 100%;
+        max-width: 800px;
+        align-items: center;
+        padding: 0px 3px 0px 0px;
+        border-radius: 10px;
+      }
+
+      #chatInput {
+        width: 100%;
+        flex-grow: 1;
+        border-radius: 10px;
+        padding: 10px 20px;
+        border: none;
+        font-size: 1rem;
+        font-family: "DM Sans";
+        resize: none;
+        min-height: 20px;
+        overflow: hidden;
+        height: 40px;
+        overflow-y: auto;
+        max-height: 20vh;
+        margin-right: 10px;
+      }
+
+      #startChat {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 20px;
+        color: white;
+        font-size: 1rem;
+        background-image: linear-gradient(to right, #507a5b, #13522a);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        white-space: nowrap;
+        font-family: "DM Sans";
+      }
+
+      #startChat::before {
+        content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>'); /* SVG for send icon */
+        margin-right: 8px;
+      }
+
+      .suggestions {
+        padding-top: 30px;
+        width: 100%;
+        max-width: 800px;
+      }
+
+      .suggestion {
+        cursor: pointer;
+        color: #01240e;
+        border-radius: 25px;
+        padding: 10px 20px;
+        margin-bottom: 10px;
+        background: #e6ede8;
+        font-size: 1rem;
+      }
+
+      #loadingIndicator {
+        display: none;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #507a5b;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 2s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .title {
+          font-size: 1.75em;
+        }
+
+        .tagline {
+          font-size: 1.125em;
+        }
+
+        .chat-box {
+          flex-direction: column;
+        }
+
+        #chatInput {
+          border-radius: 10px;
+          width: 100%;
+          margin: 0 0 10px 0;
+        }
+
+        #startChat {
+          border-radius: 10px;
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>AssessMate</title>
+    </head>
+    <body onload="checkPassword()" style="display: none">
+      <div class="container">
+        <div class="title">
+          <img
+            class="assessmate-icon"
+            src="{{ url_for('static', filename='images/logo/icon.svg') }}"
+            alt=""
+          />
+          <span>AssessMate</span>
+        </div>
+        <div class="tagline">Your BEST Assessment Mate</div>
+
+        <!-- Input Area -->
+        <div class="chat-box">
+          <textarea
+            id="chatInput"
+            placeholder="Ask Assessment for suggestions on assessment..."
+          ></textarea>
+          <button id="startChat" onclick="startChat()">Get Suggestions</button>
+        </div>
+        <div id="loadingIndicator"></div>
+
+        <div class="suggestions">
+          <div class="headline">Try these prompts</div>
+          <div class="suggestion">
+            "Design the assessment for my course in Educational Game Design."
+          </div>
+          <div class="suggestion">
+            "What should I do by design to prevent my students from using AI?"
+          </div>
+
+          <div class="headline">Insturction</div>
+          <div class="instruction">
+            <p>
+              To provide you with the most suitable assessment recommendations,
+              could you please share more details about the context?
+              Specifically:
+            </p>
+            <ol>
+              <li>
+                <strong>Subject Area</strong>: What is the topic or field of
+                study for this assessment?
+              </li>
+              <li>
+                <strong>Learning Objectives</strong>: What are the specific
+                learning outcomes you aim to evaluate through this assessment?
+                If you&#39;re unsure, could you describe the skills or knowledge
+                you expect the learners to acquire?
+              </li>
+              <li>
+                <strong>Learner Background</strong>: What is the educational
+                level and prior knowledge of the learners (e.g., high school,
+                undergraduate, professional training)?
+              </li>
+              <li>
+                <strong>Implementation Timeframe</strong>: How much time is
+                available for implementing this assessment?
+              </li>
+              <li>
+                <strong>Assessment Environment</strong>: Will the assessment be
+                conducted in a classroom setting, online, or as a take-home
+                task?
+              </li>
+              <li>
+                <strong>Use of Technology</strong>: Are you interested in
+                incorporating technology or digital tools into the assessment
+                process? For example, would you like the assessment to encourage
+                the use of generative AI or other digital resources?
+              </li>
+            </ol>
+            <p>
+              These details will help tailor the assessment design to your
+              specific needs, ensuring it aligns with your educational goals and
+              the learners&#39; context.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        function checkPassword() {
+          const password = prompt("Please enter the password:");
+          if (password === "UTas024") {
+            document.body.style.display = "block"; // show the content
+          } else {
+            alert("Incorrect password. Access denied.");
+          }
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+          var chatInput = document.getElementById("chatInput");
+
+          // automatically adjust the height of the chat input
+          chatInput.addEventListener("input", function () {
+            this.style.height = "auto"; // 重置高度
+            this.style.height = this.scrollHeight + "px";
+          });
+
+          // sending messages with keyboard
+          chatInput.addEventListener("keydown", function (event) {
+            // Use cmd/ctrl+enter to force send message
+            var isCommandOrCtrlPressed = event.metaKey || event.ctrlKey;
+            var isEnterPressed = event.key === "Enter";
+
+            if (isCommandOrCtrlPressed && isEnterPressed) {
+              event.preventDefault();
+              startChat();
+            }
+          });
+        });
+
+        // Start the chat
+        function startChat() {
+          const userInput = document.getElementById("chatInput").value;
+          if (!userInput.trim()) {
+            alert("Please enter a question.");
+            return;
+          }
+
+          // Display loading indicator
+          document.getElementById("loadingIndicator").style.display = "block";
+
+          fetch("/ask", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message: userInput.trim() }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              window.location.href = "/chat"; // redirect to chat.html
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            })
+            .finally(() => {
+              // 隐藏加载指示器
+              document.getElementById("loadingIndicator").style.display =
+                "none";
+            });
+        }
+      </script>
+    </body>
+  </html>
+</html>
