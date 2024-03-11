@@ -301,7 +301,6 @@
           });
         });
 
-        // Start the chat
         function startChat() {
           const userInput = document.getElementById("chatInput").value;
           if (!userInput.trim()) {
@@ -321,13 +320,14 @@
           })
             .then((response) => response.json())
             .then((data) => {
-              window.location.href = "/chat"; // redirect to chat.html
+              // Pass user input as a query parameter in the URL
+              window.location.href =
+                "/chat?message=" + encodeURIComponent(userInput.trim());
             })
             .catch((error) => {
               console.error("Error:", error);
             })
             .finally(() => {
-              // 隐藏加载指示器
               document.getElementById("loadingIndicator").style.display =
                 "none";
             });

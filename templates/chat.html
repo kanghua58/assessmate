@@ -287,7 +287,51 @@
 
     <script>
       console.log("%c script loading", "color: orange; font-weight: 700;");
+
       document.addEventListener("DOMContentLoaded", function () {
+        // Get user input from URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const lastUserQuery = urlParams.get("message");
+
+        if (lastUserQuery) {
+          fetch("/ask", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message: lastUserQuery }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              // Add user message to chat history
+              addMessageToChatHistory(
+                "user-message",
+                lastUserQuery,
+                data.userAvatarUrl,
+                data.systemAvatarUrl
+              );
+
+              // Add system message to chat history
+              addMessageToChatHistory(
+                "system-message",
+                data.answer,
+                data.userAvatarUrl,
+                data.systemAvatarUrl
+              );
+
+              // Clear session storage
+              sessionStorage.removeItem("lastUserQuery");
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+            })
+            .finally(() => {
+              document.getElementById("loadingIndicator").style.display =
+                "none";
+              document.getElementById("messageInput").focus();
+            });
+        }
+
         var messageInput = document.getElementById("messageInput");
         messageInput.addEventListener("input", function () {
           this.style.height = "auto";
@@ -307,6 +351,15 @@
       });
 
       function submitQuestion() {
+        const userInput = document.getElementById("messageInput").value;
+        if (!userInput.trim()) {
+          alert("Please enter a question.");
+          return;
+        }
+
+        // Display loading indicator
+        document.getElementById("loadingIndicator").style.display = "block";
+
         fetch("/ask", {
           method: "POST",
           headers: {
