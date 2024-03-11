@@ -199,9 +199,18 @@
         white-space: pre-wrap;
       }
 
+      .message-content li {
+        margin-top: 0px;
+        margin-bottom: 0px;
+      }
+
       .message-content ul,
       .message-content ol {
         margin-left: 20px;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        padding: 0px;
+        /* list-style-type: none; */
       }
 
       .message-content strong {
@@ -287,6 +296,18 @@
 
     <script>
       console.log("%c script loading", "color: orange; font-weight: 700;");
+      function setLoading(isLoading) {
+        const inputArea = document.getElementById("messageInput");
+        const loadingIndicator = document.getElementById("loadingIndicator");
+
+        if (isLoading) {
+          inputArea.disabled = true;
+          loadingIndicator.style.display = "inline-block";
+        } else {
+          inputArea.disabled = false;
+          loadingIndicator.style.display = "none";
+        }
+      }
 
       document.addEventListener("DOMContentLoaded", function () {
         // Get user input from URL query parameter
@@ -295,7 +316,7 @@
 
         if (lastUserQuery) {
           // Display loading indicator
-          document.getElementById("loadingIndicator").style.display = "block";
+          setLoading(true);
 
           fetch("/ask", {
             method: "POST",
@@ -326,8 +347,7 @@
               console.error("Error:", error);
             })
             .finally(() => {
-              document.getElementById("loadingIndicator").style.display =
-                "none";
+              setLoading(false);
               document.getElementById("messageInput").focus();
             });
         }
@@ -357,8 +377,11 @@
           return;
         }
 
+        // store user's last query
+        sessionStorage.setItem("lastUserQuery", userInput.trim());
+
         // Display loading indicator
-        document.getElementById("loadingIndicator").style.display = "block";
+        setLoading(true);
 
         fetch("/ask", {
           method: "POST",
@@ -401,9 +424,9 @@
             console.error("Error:", error);
           })
           .finally(() => {
-            document.getElementById("messageInput").value = ""; // 清空输入框
-            document.getElementById("loadingIndicator").style.display = "none";
-            document.getElementById("messageInput").focus(); // 重新聚焦输入框
+            document.getElementById("messageInput").value = "";
+            setLoading(false);
+            document.getElementById("messageInput").focus();
           });
       }
 
@@ -537,6 +560,9 @@
           return;
         }
 
+        // Display loading indicator
+        setLoading(true);
+
         fetch("/ask", {
           method: "POST",
           headers: {
@@ -554,11 +580,21 @@
               lastSystemMessageDiv.innerHTML = formatSystemMessage(data.answer); // Update the message content
             } else {
               // If the last system message is not found, add it as a new message
-              addMessageToChatHistory("system-message", data.answer);
+              addMessageToChatHistory(
+                "system-message",
+                data.answer,
+                data.userAvatarUrl,
+                data.systemAvatarUrl
+              );
             }
           })
           .catch((error) => {
             console.error("Error:", error);
+          })
+          .finally(() => {
+            document.getElementById("messageInput").value = "";
+            setLoading(false);
+            document.getElementById("messageInput").focus();
           });
       }
     </script>
