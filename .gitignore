@@ -1,5 +1,4 @@
 # .gitignore
 venv
 .env
-requirements.txt
 __pycache__
