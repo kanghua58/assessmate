@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.1/dist/showdown.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/showdown@1.9.1/dist/showdown.min.js"></script> -->
+    <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AssessMate</title>
@@ -267,22 +268,7 @@
       </a>
     </div>
     <div class="container">
-      <div class="chat-history">
-        {% for message_type, message_content in messages %}
-        <div class="message">
-          <div
-            class="message-main {{ 'user-message' if message_type == 'user' else 'system-message' }}"
-          >
-            <img
-              class="avatar"
-              src="{{ url_for('static', filename='images/logo/you.svg') if message_type == 'user' else url_for('static', filename='images/logo/icon.svg') }}"
-              alt="Avatar"
-            />
-            <div class="message-content">{{ message_content }}</div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
+      <div class="chat-history"></div>
       <!-- Clear Session Button -->
       <button id="clearSession" onclick="clearSession()">Clear Session</button>
       <div id="loadingIndicator" style="display: none">
@@ -300,15 +286,14 @@
     </div>
 
     <script>
+      console.log("%c script loading", "color: orange; font-weight: 700;");
       document.addEventListener("DOMContentLoaded", function () {
         var messageInput = document.getElementById("messageInput");
         messageInput.addEventListener("input", function () {
           this.style.height = "auto";
           this.style.height = this.scrollHeight + "px";
         });
-      });
 
-      document.addEventListener("DOMContentLoaded", function () {
         var messageInput = document.getElementById("messageInput");
 
         // Listen for message sent
@@ -322,49 +307,63 @@
       });
 
       function submitQuestion() {
-        const userInput = document.getElementById("messageInput");
-        if (!userInput.value.trim()) {
-          alert("Please enter a message.");
-          return;
-        }
-
-        // Disable message input
-        userInput.disabled = true;
-        document.getElementById("loadingIndicator").style.display = "block";
-
         fetch("/ask", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message: userInput.value.trim() }),
+          body: JSON.stringify({
+            message: document.getElementById("messageInput").value.trim(),
+          }),
         })
-          .then((response) => response.json())
+          .then((response) => {
+            if (!response.ok) {
+              return response.json().then((data) => {
+                throw new Error(data.error);
+              });
+            }
+            return response.json();
+          })
           .then((data) => {
-            // reload the page
-            location.reload();
+            // Add user message to chat history
+            addMessageToChatHistory(
+              "user-message",
+              document.getElementById("messageInput").value.trim(),
+              data.userAvatarUrl,
+              data.systemAvatarUrl
+            );
+
+            // Add system message to chat history
+            addMessageToChatHistory(
+              "system-message",
+              data.answer,
+              data.userAvatarUrl,
+              data.systemAvatarUrl
+            );
+            // ...
+
+            // Clear input
+            userInput.value = "";
           })
           .catch((error) => {
             console.error("Error:", error);
           })
           .finally(() => {
-            userInput.disabled = false;
+            document.getElementById("messageInput").value = ""; // 清空输入框
             document.getElementById("loadingIndicator").style.display = "none";
-            userInput.focus();
+            document.getElementById("messageInput").focus(); // 重新聚焦输入框
           });
       }
 
       function formatSystemMessage(message) {
-        // Bold text
-        message = message.replace(/\*{2}(.*?)\*{2}/g, "<strong>$1</strong>");
-        // Convert individual list items to HTML list items
-        message = message.replace(/^[-+*\d]\.\s(.*?)$/gm, "<li>$1</li>");
-        // Wrap all list items in a single ordered list tag
-        message = message.replace(/(<li>.*<\/li>)/g, "<ol>$1</ol>");
-        // Ensure only one set of <ol></ol> tags enclose all the <li> tags
-        message = message.replace(/<\/ol>\s*<ol>/g, "");
+        console.log(
+          "%c Calling format system message",
+          "color: orange; font-weight: 700;"
+        );
 
-        return message;
+        let converter = new showdown.Converter();
+        const convertedHTML = converter.makeHtml(message);
+        return convertedHTML;
       }
 
       function addMessageToChatHistory(
@@ -373,6 +372,10 @@
         userAvatarUrl,
         systemAvatarUrl
       ) {
+        console.log(
+          "%c Calling format system message",
+          "color: orange; font-weight: 700;"
+        );
         const chatHistory = document.querySelector(".chat-history");
 
         // Create the main chat
@@ -400,7 +403,8 @@
         messageContent.classList.add("message-content");
 
         // convert Markdown to HTML
-        messageContent.innerHTML = formatSystemMessage(message);
+        const convertedHTML = formatSystemMessage(message);
+        messageContent.innerHTML = convertedHTML;
         messageMain.appendChild(messageContent);
 
         // append message to messageDiv
