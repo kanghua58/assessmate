@@ -308,29 +308,8 @@
             return;
           }
 
-          // Display loading indicator
-          document.getElementById("loadingIndicator").style.display = "block";
-
-          fetch("/ask", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ message: userInput.trim() }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              // Pass user input as a query parameter in the URL
-              window.location.href =
-                "/chat?message=" + encodeURIComponent(userInput.trim());
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-            })
-            .finally(() => {
-              document.getElementById("loadingIndicator").style.display =
-                "none";
-            });
+          window.location.href =
+            "/chat?message=" + encodeURIComponent(userInput.trim());
         }
       </script>
     </body>

@@ -294,6 +294,9 @@
         const lastUserQuery = urlParams.get("message");
 
         if (lastUserQuery) {
+          // Display loading indicator
+          document.getElementById("loadingIndicator").style.display = "block";
+
           fetch("/ask", {
             method: "POST",
             headers: {
@@ -318,9 +321,6 @@
                 data.userAvatarUrl,
                 data.systemAvatarUrl
               );
-
-              // Clear session storage
-              sessionStorage.removeItem("lastUserQuery");
             })
             .catch((error) => {
               console.error("Error:", error);
@@ -393,7 +393,6 @@
               data.userAvatarUrl,
               data.systemAvatarUrl
             );
-            // ...
 
             // Clear input
             userInput.value = "";
